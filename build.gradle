@@ -1,0 +1,65 @@
+plugins {
+	id 'java'
+	id 'org.springframework.boot' version '3.3.6'
+	id 'io.spring.dependency-management' version '1.1.6'
+	id 'org.graalvm.buildtools.native' version '0.10.3'
+	id 'com.google.cloud.tools.jib' version '3.4.4'
+}
+
+group = 'be.johanaerens'
+version = '0.0.1-SNAPSHOT'
+
+java {
+	toolchain {
+		languageVersion = JavaLanguageVersion.of(21)
+	}
+}
+
+repositories {
+	mavenCentral()
+}
+
+ext {
+	set('springCloudAzureVersion', "5.18.0")
+}
+
+dependencies {
+	implementation 'org.springframework.boot:spring-boot-starter-actuator'
+	implementation 'org.springframework.boot:spring-boot-starter-web'
+//	implementation 'com.azure.spring:spring-cloud-azure-starter'
+//	implementation 'com.azure.spring:spring-cloud-azure-starter-actuator'
+	developmentOnly 'org.springframework.boot:spring-boot-devtools'
+//	runtimeOnly 'io.micrometer:micrometer-registry-otlp'
+	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+dependencyManagement {
+	imports {
+		mavenBom "com.azure.spring:spring-cloud-azure-dependencies:${springCloudAzureVersion}"
+	}
+}
+
+tasks.named('test') {
+	useJUnitPlatform()
+}
+
+//Own config
+springBoot {
+	buildInfo()
+}
+
+//tasks.named("bootBuildImage") {
+//	builder = "paketobuildpacks/builder-jammy-base:latest"
+//}
+
+//do not forget to add the jib plugin https://plugins.gradle.org/plugin/com.google.cloud.tools.jib
+
+jib {
+	from {
+		image = 'azul/zulu-openjdk:21-jre'
+	}
+	to {
+		image ="crcontainerappsdev003.azurecr.io/${rootProject.name}:$version"
+	}
+}
